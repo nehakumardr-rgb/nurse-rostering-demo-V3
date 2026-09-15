@@ -974,10 +974,19 @@ if generate_button:
 # 8. ROSTER OUTPUT
 # ============================================================
 
+# ============================================================
+# 8. ROSTER OUTPUT
+# ============================================================
+
 if st.session_state["roster"] is not None:
+
     st.header("8. Weekly Roster")
 
     roster_df = st.session_state["roster"]
+
+    # --------------------------------------------------------
+    # Calculate roster metrics
+    # --------------------------------------------------------
 
     total_required, total_assigned, coverage = (
         calculate_roster_metrics(
@@ -986,7 +995,18 @@ if st.session_state["roster"] is not None:
         )
     )
 
+    total_capacity = len(nurses) * max_shifts_per_nurse
+    unused_capacity = total_capacity - total_assigned
+
+    excess_assignments = max(
+        0,
+        total_assigned - total_required
+    )
+
+    # --------------------------------------------------------
     # Calculate nurse workload
+    # --------------------------------------------------------
+
     nurse_shift_counts = {}
 
     for _, row in roster_df.iterrows():
@@ -995,273 +1015,347 @@ if st.session_state["roster"] is not None:
             for day in DAYS
         )
 
-    total_capacity = len(nurses) * max_shifts_per_nurse
-    unused_capacity = total_capacity - total_assigned
-    excess_assignments = max(
-        0,
-        total_assigned - total_required
-    )
+    # ========================================================
+    # ROSTER SUMMARY
+    # ========================================================
 
-    # Summary cards
+    st.subheader("Roster Summary")
 
-st.subheader("Roster Summary")
+    card_columns = st.columns(4)
 
-card_columns = st.columns(4)
-
-with card_columns[0]:
-    st.markdown(
-        f"""
-        <div style="
-            background: #EAF4FB;
-            border: 1px solid #B8D8EA;
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            min-height: 120px;
-        ">
-            <div style="font-size: 28px;">👥</div>
-            <div style="font-size: 14px; color: #526777;">
-                Required nurse-shifts
-            </div>
+    # Required nurse-shifts
+    with card_columns[0]:
+        st.markdown(
+            f"""
             <div style="
-                font-size: 30px;
-                font-weight: 700;
-                color: #234E70;
+                background-color:#EAF4FB;
+                border:1px solid #B8D8EA;
+                border-radius:12px;
+                padding:18px;
+                text-align:center;
             ">
-                {total_required}
+                <div style="font-size:28px;">👥</div>
+                <div style="font-size:14px;color:#555;">
+                    Required nurse-shifts
+                </div>
+                <div style="
+                    font-size:28px;
+                    font-weight:bold;
+                    color:#234E70;
+                ">
+                    {total_required}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )
 
-with card_columns[1]:
-    st.markdown(
-        f"""
-        <div style="
-            background: #EAF7F0;
-            border: 1px solid #B9DFC9;
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            min-height: 120px;
-        ">
-            <div style="font-size: 28px;">✅</div>
-            <div style="font-size: 14px; color: #526777;">
-                Assigned nurse-shifts
-            </div>
+    # Assigned nurse-shifts
+    with card_columns[1]:
+        st.markdown(
+            f"""
             <div style="
-                font-size: 30px;
-                font-weight: 700;
-                color: #28734A;
+                background-color:#EAF7F0;
+                border:1px solid #B9DFC9;
+                border-radius:12px;
+                padding:18px;
+                text-align:center;
             ">
-                {total_assigned}
+                <div style="font-size:28px;">✅</div>
+                <div style="font-size:14px;color:#555;">
+                    Assigned nurse-shifts
+                </div>
+                <div style="
+                    font-size:28px;
+                    font-weight:bold;
+                    color:#2E6B4A;
+                ">
+                    {total_assigned}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )
 
-with card_columns[2]:
-    st.markdown(
-        f"""
-        <div style="
-            background: #FFF6E5;
-            border: 1px solid #E8D2A3;
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            min-height: 120px;
-        ">
-            <div style="font-size: 28px;">📊</div>
-            <div style="font-size: 14px; color: #526777;">
-                Weekly capacity
-            </div>
+    # Weekly capacity
+    with card_columns[2]:
+        st.markdown(
+            f"""
             <div style="
-                font-size: 30px;
-                font-weight: 700;
-                color: #8A6418;
+                background-color:#FFF6E5;
+                border:1px solid #E8D2A3;
+                border-radius:12px;
+                padding:18px;
+                text-align:center;
             ">
-                {total_capacity}
+                <div style="font-size:28px;">📊</div>
+                <div style="font-size:14px;color:#555;">
+                    Weekly capacity
+                </div>
+                <div style="
+                    font-size:28px;
+                    font-weight:bold;
+                    color:#80652A;
+                ">
+                    {total_capacity}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )
 
-with card_columns[3]:
-    st.markdown(
-        f"""
-        <div style="
-            background: #F3ECF8;
-            border: 1px solid #D5C2E2;
-            border-radius: 12px;
-            padding: 18px;
-            text-align: center;
-            min-height: 120px;
-        ">
-            <div style="font-size: 28px;">📉</div>
-            <div style="font-size: 14px; color: #526777;">
-                Unused capacity
-            </div>
+    # Unused capacity
+    with card_columns[3]:
+        st.markdown(
+            f"""
             <div style="
-                font-size: 30px;
-                font-weight: 700;
-                color: #67427D;
+                background-color:#F3ECF8;
+                border:1px solid #D5C2E2;
+                border-radius:12px;
+                padding:18px;
+                text-align:center;
             ">
-                {unused_capacity}
+                <div style="font-size:28px;">📉</div>
+                <div style="font-size:14px;color:#555;">
+                    Unused capacity
+                </div>
+                <div style="
+                    font-size:28px;
+                    font-weight:bold;
+                    color:#684A7A;
+                ">
+                    {unused_capacity}
+                </div>
             </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+            """,
+            unsafe_allow_html=True
+        )
 
-# Weekly roster
-st.markdown(
-    """
-    <h2 style="text-align: center; color: #234E70;">
-        📅 Weekly Roster
-    </h2>
-    """,
-    unsafe_allow_html=True
-)
+    st.write("")
 
-st.dataframe(
-    roster_df,
-    use_container_width=True,
-    hide_index=True
-)
-
-# Nurse workload
-st.markdown(
-    """
-    <h2 style="text-align: center; color: #234E70;">
-        Nurse Workload Summary
-    </h2>
-    """,
-    unsafe_allow_html=True
-)
-
-nurse_shift_counts = {}
-
-for _, row in roster_df.iterrows():
-    nurse_shift_counts[row["Nurse"]] = sum(
-        row[day] in SHIFTS
-        for day in DAYS
-    )
-
-workload_df = pd.DataFrame({
-    "Nurse": list(nurse_shift_counts.keys()),
-    "Assigned Shifts": list(nurse_shift_counts.values())
-})
-
-workload_df["Maximum Allowed"] = max_shifts_per_nurse
-
-workload_df["Remaining Capacity"] = (
-    workload_df["Maximum Allowed"]
-    - workload_df["Assigned Shifts"]
-)
-
-workload_df = workload_df.sort_values(
-    by=["Assigned Shifts", "Nurse"]
-)
-
-st.dataframe(
-    workload_df,
-    use_container_width=True,
-    hide_index=True
-)
-
-# Key observations
-st.markdown(
-    """
-    <h2 style="text-align: center; color: #234E70;">
-        Key Observations
-    </h2>
-    """,
-    unsafe_allow_html=True
-)
-
-nurses_below_limit = workload_df[
-    workload_df["Assigned Shifts"] < max_shifts_per_nurse
-]
-
-if unused_capacity > 0:
-    st.markdown(
-        f"""
-        <div style="
-            background: #FFF8E8;
-            border-left: 5px solid #E0B84C;
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        ">
-            <b>📊 Workforce capacity:</b>
-            The roster uses <b>{total_assigned}</b> of
-            <b>{total_capacity}</b> available nurse-shifts,
-            leaving <b>{unused_capacity} shifts</b> of unused capacity.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-if excess_assignments > 0:
-    st.markdown(
-        f"""
-        <div style="
-            background: #EAF4FB;
-            border-left: 5px solid #7BB7D9;
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        ">
-            <b>📌 Staffing:</b>
-            The roster contains <b>{excess_assignments}</b>
-            nurse-shifts above the minimum staffing requirement.
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-if not nurses_below_limit.empty:
-    nurse_names = ", ".join(
-        nurses_below_limit["Nurse"].tolist()
-    )
+    # ========================================================
+    # WEEKLY ROSTER
+    # ========================================================
 
     st.markdown(
-        f"""
-        <div style="
-            background: #F3ECF8;
-            border-left: 5px solid #A982BC;
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 12px;
+        """
+        <h2 style="
+            text-align:center;
+            color:#234E70;
+            margin-top:20px;
         ">
-            <b>👩‍⚕️ Workload observation:</b>
-            The following nurses are below their weekly shift limit:
-            <b>{nurse_names}</b>.
-        </div>
+            📅 Weekly Roster
+        </h2>
         """,
         unsafe_allow_html=True
     )
-else:
-    st.success(
-        "All nurses are assigned up to their configured weekly shift limit."
+
+    st.dataframe(
+        roster_df,
+        use_container_width=True,
+        hide_index=True
     )
 
-# Download
-csv_data = roster_df.to_csv(
-    index=False
-).encode("utf-8")
+    # ========================================================
+    # NURSE WORKLOAD
+    # ========================================================
 
-st.download_button(
-    "Download Roster as CSV",
-    data=csv_data,
-    file_name="nurse_roster_v3.csv",
-    mime="text/csv",
-    use_container_width=True
-)
+    st.markdown(
+        """
+        <h2 style="
+            text-align:center;
+            color:#234E70;
+            margin-top:30px;
+        ">
+            Nurse Workload Summary
+        </h2>
+        """,
+        unsafe_allow_html=True
+    )
 
+    workload_df = pd.DataFrame(
+        [
+            {
+                "Nurse": nurse,
+                "Assigned Shifts": nurse_shift_counts.get(
+                    nurse,
+                    0
+                ),
+                "Maximum Allowed": max_shifts_per_nurse,
+                "Remaining Capacity": max(
+                    0,
+                    max_shifts_per_nurse
+                    - nurse_shift_counts.get(nurse, 0)
+                )
+            }
+            for nurse in nurses
+        ]
+    )
+
+    workload_df = workload_df.sort_values(
+        by=["Assigned Shifts", "Nurse"],
+        ascending=[False, True]
+    )
+
+    st.dataframe(
+        workload_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    # ========================================================
+    # KEY OBSERVATIONS
+    # ========================================================
+
+    st.markdown(
+        """
+        <h2 style="
+            text-align:center;
+            color:#234E70;
+            margin-top:30px;
+        ">
+            Key Observations
+        </h2>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Workforce capacity observation
+    if unused_capacity > 0:
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#FFF8E8;
+                border-left:6px solid #E0B84C;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>📊 Workforce capacity:</b>
+                The roster uses {total_assigned} of
+                {total_capacity} available nurse-shifts,
+                leaving {unused_capacity} unused capacity.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#EAF7F0;
+                border-left:6px solid #6BB38A;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>📊 Workforce capacity:</b>
+                All available weekly nurse-shift capacity
+                is utilized.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Staffing observation
+    if excess_assignments > 0:
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#EAF4FB;
+                border-left:6px solid #7BB7D9;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>📌 Staffing:</b>
+                The generated roster contains
+                {excess_assignments} nurse-shifts above
+                the minimum staffing requirement.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            """
+            <div style="
+                background-color:#EAF4FB;
+                border-left:6px solid #7BB7D9;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>📌 Staffing:</b>
+                The roster meets the minimum staffing
+                requirements without additional assignments.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # Workload observation
+    nurses_below_limit = workload_df[
+        workload_df["Assigned Shifts"]
+        < workload_df["Maximum Allowed"]
+    ]
+
+    if not nurses_below_limit.empty:
+
+        nurse_names = ", ".join(
+            nurses_below_limit["Nurse"].tolist()
+        )
+
+        st.markdown(
+            f"""
+            <div style="
+                background-color:#F3ECF8;
+                border-left:6px solid #A982BC;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>👩‍⚕️ Workload:</b>
+                The following nurses are below their weekly
+                shift limit: {nurse_names}.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    else:
+
+        st.markdown(
+            """
+            <div style="
+                background-color:#F3ECF8;
+                border-left:6px solid #A982BC;
+                border-radius:8px;
+                padding:14px;
+                margin-bottom:10px;
+            ">
+                <b>👩‍⚕️ Workload:</b>
+                All nurses are assigned up to their configured
+                weekly shift limit.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # ========================================================
+    # DOWNLOAD ROSTER
+    # ========================================================
+
+    st.markdown("### Download Roster")
+
+    csv_data = roster_df.to_csv(index=False)
+
+    st.download_button(
+        label="Download Roster as CSV",
+        data=csv_data,
+        file_name="nurse_roster.csv",
+        mime="text/csv"
+    )
 
 # ============================================================
 # FOOTER
