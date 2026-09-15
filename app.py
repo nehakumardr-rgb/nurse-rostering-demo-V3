@@ -775,7 +775,7 @@ with rule_columns[1]:
     )
 
 st.caption(
-    "V3 currently uses a minimum rest requirement of 2 complete shift "
+    "Currently uses a minimum rest requirement of 2 complete shift "
     "periods between consecutive assignments."
 )
 
