@@ -1111,64 +1111,151 @@ with card_columns[3]:
         unsafe_allow_html=True
     )
 
-    # Nurse workload
-    st.subheader("Nurse Workload Summary")
+# Weekly roster
+st.markdown(
+    """
+    <h2 style="text-align: center; color: #234E70;">
+        📅 Weekly Roster
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
 
-    workload_df = pd.DataFrame({
-        "Nurse": list(nurse_shift_counts.keys()),
-        "Assigned Shifts": list(nurse_shift_counts.values())
-    })
+st.dataframe(
+    roster_df,
+    use_container_width=True,
+    hide_index=True
+)
 
-    workload_df["Maximum Allowed"] = max_shifts_per_nurse
-    workload_df["Remaining Capacity"] = (
-        workload_df["Maximum Allowed"]
-        - workload_df["Assigned Shifts"]
+# Nurse workload
+st.markdown(
+    """
+    <h2 style="text-align: center; color: #234E70;">
+        👩‍⚕️ Nurse Workload Summary
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
+
+nurse_shift_counts = {}
+
+for _, row in roster_df.iterrows():
+    nurse_shift_counts[row["Nurse"]] = sum(
+        row[day] in SHIFTS
+        for day in DAYS
     )
 
-    workload_df = workload_df.sort_values(
-        by=["Assigned Shifts", "Nurse"]
+workload_df = pd.DataFrame({
+    "Nurse": list(nurse_shift_counts.keys()),
+    "Assigned Shifts": list(nurse_shift_counts.values())
+})
+
+workload_df["Maximum Allowed"] = max_shifts_per_nurse
+
+workload_df["Remaining Capacity"] = (
+    workload_df["Maximum Allowed"]
+    - workload_df["Assigned Shifts"]
+)
+
+workload_df = workload_df.sort_values(
+    by=["Assigned Shifts", "Nurse"]
+)
+
+st.dataframe(
+    workload_df,
+    use_container_width=True,
+    hide_index=True
+)
+
+# Key observations
+st.markdown(
+    """
+    <h2 style="text-align: center; color: #234E70;">
+        💡 Key Observations
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
+
+nurses_below_limit = workload_df[
+    workload_df["Assigned Shifts"] < max_shifts_per_nurse
+]
+
+if unused_capacity > 0:
+    st.markdown(
+        f"""
+        <div style="
+            background: #FFF8E8;
+            border-left: 5px solid #E0B84C;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        ">
+            <b>📊 Workforce capacity:</b>
+            The roster uses <b>{total_assigned}</b> of
+            <b>{total_capacity}</b> available nurse-shifts,
+            leaving <b>{unused_capacity} shifts</b> of unused capacity.
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    st.dataframe(
-        workload_df,
-        use_container_width=True,
-        hide_index=True
+if excess_assignments > 0:
+    st.markdown(
+        f"""
+        <div style="
+            background: #EAF4FB;
+            border-left: 5px solid #7BB7D9;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        ">
+            <b>📌 Staffing:</b>
+            The roster contains <b>{excess_assignments}</b>
+            nurse-shifts above the minimum staffing requirement.
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-    nurses_below_limit = workload_df[
-        workload_df["Assigned Shifts"] < max_shifts_per_nurse
-    ]
-
-    if not nurses_below_limit.empty:
-        nurse_names = ", ".join(
-            nurses_below_limit["Nurse"].tolist()
-        )
-
-        st.caption(
-            f"Nurses below the weekly shift limit: {nurse_names}."
-        )
-
-    # Weekly roster table
-    st.subheader("Weekly Roster")
-
-    st.dataframe(
-        roster_df,
-        use_container_width=True,
-        hide_index=True
+if not nurses_below_limit.empty:
+    nurse_names = ", ".join(
+        nurses_below_limit["Nurse"].tolist()
     )
 
-    # Download
-    csv_data = roster_df.to_csv(
-        index=False
-    ).encode("utf-8")
-
-    st.download_button(
-        "Download Roster as CSV",
-        data=csv_data,
-        file_name="nurse_roster_v3.csv",
-        mime="text/csv",
-        use_container_width=True
+    st.markdown(
+        f"""
+        <div style="
+            background: #F3ECF8;
+            border-left: 5px solid #A982BC;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        ">
+            <b>👩‍⚕️ Workload observation:</b>
+            The following nurses are below their weekly shift limit:
+            <b>{nurse_names}</b>.
+        </div>
+        """,
+        unsafe_allow_html=True
     )
+else:
+    st.success(
+        "All nurses are assigned up to their configured weekly shift limit."
+    )
+
+# Download
+csv_data = roster_df.to_csv(
+    index=False
+).encode("utf-8")
+
+st.download_button(
+    "Download Roster as CSV",
+    data=csv_data,
+    file_name="nurse_roster_v3.csv",
+    mime="text/csv",
+    use_container_width=True
+)
 
 st.divider()
 
