@@ -532,7 +532,6 @@ elif len(set(nurses)) != len(nurses):
 # ============================================================
 
 st.header("3. Nurse Availability & Off Days")
-
 st.markdown(
     """
     <div class="availability-note">
@@ -559,32 +558,67 @@ if len(nurses) == number_of_nurses and len(set(nurses)) == len(nurses):
 
             with day_columns[day_index]:
 
-                st.markdown(
-                    f"**{day[:3]}**"
+                st.markdown(f"**{day[:3]}**")
+
+                morning_key = f"morning_v3_{nurse_index}_{day_index}"
+                evening_key = f"evening_v3_{nurse_index}_{day_index}"
+                night_key = f"night_v3_{nurse_index}_{day_index}"
+                off_key = f"off_v3_{nurse_index}_{day_index}"
+
+                def handle_off_day(
+                    morning_key=morning_key,
+                    evening_key=evening_key,
+                    night_key=night_key,
+                    off_key=off_key
+                ):
+                    if st.session_state[off_key]:
+                        st.session_state[morning_key] = False
+                        st.session_state[evening_key] = False
+                        st.session_state[night_key] = False
+
+                def handle_shift(
+                    off_key=off_key
+                ):
+                    if (
+                        st.session_state.get(morning_key, False)
+                        or st.session_state.get(evening_key, False)
+                        or st.session_state.get(night_key, False)
+                    ):
+                        st.session_state[off_key] = False
+
+                off_day_current = st.session_state.get(
+                    off_key, False
                 )
 
                 morning = st.checkbox(
                     "Morning",
                     value=True,
-                    key=f"morning_v3_{nurse_index}_{day_index}"
+                    key=morning_key,
+                    disabled=off_day_current,
+                    on_change=handle_shift
                 )
 
                 evening = st.checkbox(
                     "Evening",
                     value=True,
-                    key=f"evening_v3_{nurse_index}_{day_index}"
+                    key=evening_key,
+                    disabled=off_day_current,
+                    on_change=handle_shift
                 )
 
                 night = st.checkbox(
                     "Night",
                     value=True,
-                    key=f"night_v3_{nurse_index}_{day_index}"
+                    key=night_key,
+                    disabled=off_day_current,
+                    on_change=handle_shift
                 )
 
                 off_day = st.checkbox(
                     "Off day",
                     value=False,
-                    key=f"off_v3_{nurse_index}_{day_index}"
+                    key=off_key,
+                    on_change=handle_off_day
                 )
 
                 selected_shifts = []
@@ -598,7 +632,6 @@ if len(nurses) == number_of_nurses and len(set(nurses)) == len(nurses):
                 if night:
                     selected_shifts.append("Night")
 
-                # Off day takes priority
                 if off_day:
                     selected_shifts = []
 
@@ -609,14 +642,12 @@ if len(nurses) == number_of_nurses and len(set(nurses)) == len(nurses):
                     "Off day": off_day
                 })
 
-    availability_df = pd.DataFrame(
-        availability_records
-    )
+    availability_df = pd.DataFrame(availability_records)
 
 else:
-
     availability_df = pd.DataFrame()
 
+# 4 Preferences
 
 # ============================================================
 # 4. NURSE PREFERENCES
