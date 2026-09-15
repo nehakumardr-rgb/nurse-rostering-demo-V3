@@ -970,7 +970,6 @@ if generate_button:
 # ============================================================
 
 if st.session_state["roster"] is not None:
-
     st.header("8. Weekly Roster")
 
     roster_df = st.session_state["roster"]
@@ -982,7 +981,26 @@ if st.session_state["roster"] is not None:
         )
     )
 
-    metric_columns = st.columns(3)
+    # Calculate nurse workload
+    nurse_shift_counts = {}
+
+    for _, row in roster_df.iterrows():
+        nurse_shift_counts[row["Nurse"]] = sum(
+            row[day] in SHIFTS
+            for day in DAYS
+        )
+
+    total_capacity = len(nurses) * max_shifts_per_nurse
+    unused_capacity = total_capacity - total_assigned
+    excess_assignments = max(
+        0,
+        total_assigned - total_required
+    )
+
+    # Summary cards
+    st.subheader("Roster Summary")
+
+    metric_columns = st.columns(4)
 
     with metric_columns[0]:
         st.metric(
@@ -998,9 +1016,75 @@ if st.session_state["roster"] is not None:
 
     with metric_columns[2]:
         st.metric(
-            "Coverage",
-            f"{coverage:.0f}%"
+            "Weekly capacity",
+            total_capacity
         )
+
+    with metric_columns[3]:
+        st.metric(
+            "Unused capacity",
+            unused_capacity
+        )
+
+    # Interpretation
+    if unused_capacity > 0:
+        st.markdown(
+            f"""
+            <div class="availability-note">
+            <b>Capacity insight:</b>
+            The roster uses <b>{total_assigned}</b> of
+            <b>{total_capacity}</b> available nurse-shifts,
+            leaving <b>{unused_capacity} shifts</b> of unused weekly capacity.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    if excess_assignments > 0:
+        st.info(
+            f"The generated roster contains {excess_assignments} "
+            "nurse-shifts above the minimum staffing requirement."
+        )
+
+    # Nurse workload
+    st.subheader("Nurse Workload Summary")
+
+    workload_df = pd.DataFrame({
+        "Nurse": list(nurse_shift_counts.keys()),
+        "Assigned Shifts": list(nurse_shift_counts.values())
+    })
+
+    workload_df["Maximum Allowed"] = max_shifts_per_nurse
+    workload_df["Remaining Capacity"] = (
+        workload_df["Maximum Allowed"]
+        - workload_df["Assigned Shifts"]
+    )
+
+    workload_df = workload_df.sort_values(
+        by=["Assigned Shifts", "Nurse"]
+    )
+
+    st.dataframe(
+        workload_df,
+        use_container_width=True,
+        hide_index=True
+    )
+
+    nurses_below_limit = workload_df[
+        workload_df["Assigned Shifts"] < max_shifts_per_nurse
+    ]
+
+    if not nurses_below_limit.empty:
+        nurse_names = ", ".join(
+            nurses_below_limit["Nurse"].tolist()
+        )
+
+        st.caption(
+            f"Nurses below the weekly shift limit: {nurse_names}."
+        )
+
+    # Weekly roster table
+    st.subheader("Weekly Roster")
 
     st.dataframe(
         roster_df,
@@ -1008,6 +1092,7 @@ if st.session_state["roster"] is not None:
         hide_index=True
     )
 
+    # Download
     csv_data = roster_df.to_csv(
         index=False
     ).encode("utf-8")
@@ -1020,6 +1105,12 @@ if st.session_state["roster"] is not None:
         use_container_width=True
     )
 
+st.divider()
+
+st.caption(
+    "Nurse Roster Optimizer V3 | "
+    "Python • OR-Tools CP-SAT • Streamlit"
+)
 
 # ============================================================
 # FOOTER
