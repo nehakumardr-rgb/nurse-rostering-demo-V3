@@ -1131,7 +1131,7 @@ st.dataframe(
 st.markdown(
     """
     <h2 style="text-align: center; color: #234E70;">
-        👩‍⚕️ Nurse Workload Summary
+        Nurse Workload Summary
     </h2>
     """,
     unsafe_allow_html=True
@@ -1171,7 +1171,7 @@ st.dataframe(
 st.markdown(
     """
     <h2 style="text-align: center; color: #234E70;">
-        💡 Key Observations
+        Key Observations
     </h2>
     """,
     unsafe_allow_html=True
