@@ -24,9 +24,14 @@ st.markdown(
     }
 
     /* Checkbox accent */
-    [data-testid="stCheckbox"] input[type="checkbox"] {
-    accent-color: #7BB7D9 !important;
-    }
+    [data-testid="stCheckbox"] div[data-baseweb="checkbox"] > div:first-child {
+    background-color: #7BB7D9 !important;
+    border-color: #7BB7D9 !important;
+}
+
+[data-testid="stCheckbox"] div[data-baseweb="checkbox"] svg {
+    fill: white !important;
+}
 
     /* Availability labels */
     .availability-note {
