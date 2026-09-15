@@ -24,8 +24,8 @@ st.markdown(
     }
 
     /* Checkbox accent */
-    input[type="checkbox"] {
-        accent-color: #7BB7D9 !important;
+    [data-testid="stCheckbox"] input[type="checkbox"] {
+    accent-color: #7BB7D9 !important;
     }
 
     /* Availability labels */
