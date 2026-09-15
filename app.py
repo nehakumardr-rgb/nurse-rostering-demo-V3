@@ -1257,12 +1257,6 @@ st.download_button(
     use_container_width=True
 )
 
-st.divider()
-
-st.caption(
-    "Nurse Roster Optimizer V3 | "
-    "Python • OR-Tools CP-SAT • Streamlit"
-)
 
 # ============================================================
 # FOOTER
