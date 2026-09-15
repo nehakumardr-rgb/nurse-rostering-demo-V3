@@ -998,53 +998,118 @@ if st.session_state["roster"] is not None:
     )
 
     # Summary cards
-    st.subheader("Roster Summary")
 
-    metric_columns = st.columns(4)
+st.subheader("Roster Summary")
 
-    with metric_columns[0]:
-        st.metric(
-            "Required nurse-shifts",
-            total_required
-        )
+card_columns = st.columns(4)
 
-    with metric_columns[1]:
-        st.metric(
-            "Assigned nurse-shifts",
-            total_assigned
-        )
-
-    with metric_columns[2]:
-        st.metric(
-            "Weekly capacity",
-            total_capacity
-        )
-
-    with metric_columns[3]:
-        st.metric(
-            "Unused capacity",
-            unused_capacity
-        )
-
-    # Interpretation
-    if unused_capacity > 0:
-        st.markdown(
-            f"""
-            <div class="availability-note">
-            <b>Capacity insight:</b>
-            The roster uses <b>{total_assigned}</b> of
-            <b>{total_capacity}</b> available nurse-shifts,
-            leaving <b>{unused_capacity} shifts</b> of unused weekly capacity.
+with card_columns[0]:
+    st.markdown(
+        f"""
+        <div style="
+            background: #EAF4FB;
+            border: 1px solid #B8D8EA;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            min-height: 120px;
+        ">
+            <div style="font-size: 28px;">👥</div>
+            <div style="font-size: 14px; color: #526777;">
+                Required nurse-shifts
             </div>
-            """,
-            unsafe_allow_html=True
-        )
+            <div style="
+                font-size: 30px;
+                font-weight: 700;
+                color: #234E70;
+            ">
+                {total_required}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    if excess_assignments > 0:
-        st.info(
-            f"The generated roster contains {excess_assignments} "
-            "nurse-shifts above the minimum staffing requirement."
-        )
+with card_columns[1]:
+    st.markdown(
+        f"""
+        <div style="
+            background: #EAF7F0;
+            border: 1px solid #B9DFC9;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            min-height: 120px;
+        ">
+            <div style="font-size: 28px;">✅</div>
+            <div style="font-size: 14px; color: #526777;">
+                Assigned nurse-shifts
+            </div>
+            <div style="
+                font-size: 30px;
+                font-weight: 700;
+                color: #28734A;
+            ">
+                {total_assigned}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with card_columns[2]:
+    st.markdown(
+        f"""
+        <div style="
+            background: #FFF6E5;
+            border: 1px solid #E8D2A3;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            min-height: 120px;
+        ">
+            <div style="font-size: 28px;">📊</div>
+            <div style="font-size: 14px; color: #526777;">
+                Weekly capacity
+            </div>
+            <div style="
+                font-size: 30px;
+                font-weight: 700;
+                color: #8A6418;
+            ">
+                {total_capacity}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with card_columns[3]:
+    st.markdown(
+        f"""
+        <div style="
+            background: #F3ECF8;
+            border: 1px solid #D5C2E2;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            min-height: 120px;
+        ">
+            <div style="font-size: 28px;">📉</div>
+            <div style="font-size: 14px; color: #526777;">
+                Unused capacity
+            </div>
+            <div style="
+                font-size: 30px;
+                font-weight: 700;
+                color: #67427D;
+            ">
+                {unused_capacity}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Nurse workload
     st.subheader("Nurse Workload Summary")
